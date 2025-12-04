@@ -20,7 +20,7 @@ A powerful command-line AI assistant powered by Google Gemini for developers.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/dev-ai-cli.git
+git clone https://github.com/naushadraien/dev-ai-cli.git
 cd dev-ai-cli
 ```
 
