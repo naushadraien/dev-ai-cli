@@ -1,4 +1,6 @@
 import { askAI } from "../ai";
+import * as fs from "fs/promises";
+import * as path from "path";
 
 const SYSTEM_INSTRUCTION = `You are DevAI's Standup Formatter - a specialized tool for formatting daily standup updates.
 
@@ -60,7 +62,24 @@ Huntgate:
 Standup-mgmt:
 - Implemented API functionality`;
 
-export const formatStandup = async (prompt: string) => {
+/**
+ * Formats standup data into a professional daily update format
+ * @param {string} prompt - The raw standup data to format (e.g., "fixed bug, added feature")
+ * @param {string} [outputFilePath] - Optional file path to append the formatted standup
+ * @returns {Promise<string>} The formatted standup response from AI
+ * @throws {Error} If AI request fails or file write fails
+ * @example
+ * // Basic usage
+ * const result = await formatStandup("fixed login bug, added validation");
+ *
+ * // With file output
+ * const result = await formatStandup("huntgate: fixed ui", "C:\\Users\\irsha\\Desktop\\job.txt");
+ */
+
+export const formatStandup = async (
+  prompt: string,
+  outputFilePath?: string
+): Promise<string> => {
   const now = new Date();
   const day = now.getDate().toString().padStart(2, "0");
   const month = (now.getMonth() + 1).toString().padStart(2, "0");
@@ -68,9 +87,59 @@ export const formatStandup = async (prompt: string) => {
   const dayName = now.toLocaleDateString("en-US", { weekday: "long" });
   const today = `${day}/${month}/${year} - ${dayName}`; //calculating date manually as AI can give inaccurate date
 
-  return askAI(`Today's date is: ${today}\n\nFormat these tasks:\n${prompt}`, {
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-    },
-  });
+  const response = await askAI(
+    `Today's date is: ${today}\n\nFormat these tasks:\n${prompt}`,
+    {
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+      },
+    }
+  );
+
+  //append ai response to output file path
+  if (outputFilePath) {
+    const resolvedPath = path.resolve(outputFilePath);
+
+    // Check if path is a directory
+    try {
+      const stats = await fs.stat(resolvedPath);
+      if (stats.isDirectory()) {
+        throw new Error(
+          `Output path is a directory. Please provide a file path (e.g., ${resolvedPath}\\Job.txt)`
+        );
+      }
+    } catch (error: any) {
+      // ENOENT means file doesn't exist yet
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+    }
+
+    // Check if file exists and has content
+    let prefix = "";
+
+    try {
+      const existingContent = await fs.readFile(resolvedPath, "utf-8");
+      if (existingContent.trim().length > 0) {
+        prefix = "\n\n";
+      }
+    } catch (error: any) {
+      if (error.code === "ENOENT") {
+        try {
+          await fs.mkdir(path.dirname(resolvedPath), { recursive: true });
+        } catch (mkdirError: any) {
+          if (mkdirError.code !== "EEXIST") {
+            throw mkdirError;
+          }
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    await fs.appendFile(resolvedPath, prefix + response, "utf-8");
+    console.log(`Standup appended to: ${resolvedPath}`);
+  }
+
+  return response;
 };
