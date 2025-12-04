@@ -3,6 +3,7 @@ import { Command } from "commander";
 import ora from "ora";
 import { defaultCommand } from "./commands/default";
 import { formatStandup } from "./commands/standup-formatter";
+import { speak } from "./util/speak-with-powershell";
 
 /* 
 you can run any of the below command in the powershell if the devai command does not work:
@@ -23,28 +24,46 @@ program
 /**
  * Default command - Ask AI anything
  * @param {string[]} query - The query to ask the AI (joined with spaces)
+ * @param {Object} options - Command options
+ * @param {boolean} [options.voice] - Optional flag to speak the response
  * @example
  * devai "how to center a div in css"
- * devai explain async await in javascript
+ * devai "explain async await" -v
+ * devai "what is typescript" --voice
+ *
+ * // Ask AI (default command) - both work the same
+ * devai ask "what is typescript" -v
+ * devai "what is typescript" -v
  */
-program.argument("<query...>", "Ask AI anything").action(async (query) => {
-  const text = query.join(" ");
-  const spinner = ora("🤖 AI is thinking...").start();
-  try {
-    const result = await defaultCommand(text);
-    spinner.succeed("Done!");
-    console.log(chalk.green(result));
-  } catch (error) {
-    spinner.fail("Something went wrong!");
-    console.error(chalk.red(error));
-  }
-});
+program
+  .command("ask", { isDefault: true }) //{ isDefault: true } makes it run when no other command matches
+  .argument("<query...>", "Ask AI anything")
+  .option("-v, --voice", "Speak the AI response using text-to-speech")
+  .action(async (query, options) => {
+    const text = query.join(" ");
+    const spinner = ora("🤖 AI is thinking...").start();
+    try {
+      const result = await defaultCommand(text);
+      spinner.succeed("Done!");
+      console.log(chalk.green(result));
+
+      if (options.voice) {
+        spinner.start("🔊 Speaking...");
+        await speak(result);
+        spinner.succeed("Done speaking!");
+      }
+    } catch (error) {
+      spinner.fail("Something went wrong!");
+      console.error(chalk.red(error));
+    }
+  });
 
 /**
  * Format Standup command - Formats daily standup updates professionally
  * @param {string[]} data - The standup data to format (joined with spaces)
  * @param {Object} options - Command options
  * @param {string} [options.output] - Optional file path to append the formatted standup
+ * @param {boolean} [options.voice] - Optional flag to speak the response
  * @example
  * // Without file output
  * devai formatStandup "fixed login bug, added validation"
@@ -52,13 +71,17 @@ program.argument("<query...>", "Ask AI anything").action(async (query) => {
  * // With file output (appends to file)
  * devai formatStandup "huntgate: fixed ui issue" -o "C:\Users\irsha\Desktop\job.txt"
  *
- * // Using --output flag
- * devai formatStandup "standup-mgmt: explored figma" --output "./job.txt"
+ * // With voice output
+ * devai formatStandup "fixed login bug" -v
+ *
+ * // With both file and voice output
+ * devai formatStandup "fixed bug" -o "./job.txt" -v
  */
 program
   .command("formatStandup")
   .argument("<data...>", "Standup data to format")
   .option("-o, --output <path>", "Output file path to append the standup")
+  .option("-v, --voice", "Speak the AI response using text-to-speech")
   .description("Format the provided standup")
   .action(async (data, options) => {
     const text = data.join(" ");
@@ -67,6 +90,12 @@ program
       const result = await formatStandup(text, options.output);
       spinner.succeed("Standup formatted!");
       console.log(chalk.cyan(result));
+
+      if (options.voice) {
+        spinner.start("🔊 Speaking...");
+        await speak(result);
+        spinner.succeed("Done speaking!");
+      }
     } catch (error) {
       spinner.fail("Failed to format standup!");
       console.error(chalk.red(error));

@@ -138,7 +138,7 @@ export const formatStandup = async (
     }
 
     await fs.appendFile(resolvedPath, prefix + response, "utf-8");
-    console.log(`Standup appended to: ${resolvedPath}`);
+    console.log(`\n\nStandup appended to: ${resolvedPath}`);
   }
 
   return response;
