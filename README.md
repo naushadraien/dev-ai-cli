@@ -6,8 +6,9 @@ A powerful command-line AI assistant powered by Google Gemini for developers.
 
 - 🤖 Ask AI any coding or development question
 - 📝 Format standup notes automatically
-- 📁 Save output to files
+- 📁 Save output to files (with smart merging)
 - 🔊 Text-to-speech voice output
+- 📋 View all of today's standups
 - ⚡ Fast execution with Bun runtime
 
 ## Installation
@@ -65,7 +66,7 @@ devai "Explain promises" --voice
 # Basic usage
 devai formatStandup "worked on lockgate feature, added CSS styling, fixed auth bug"
 
-# Save to file (appends if file exists)
+# Save to file (appends and merges if file exists)
 devai formatStandup "fixed login bug, added validation" -o "C:\Users\YourName\Desktop\job.txt"
 
 # With voice output
@@ -73,33 +74,81 @@ devai formatStandup "huntgate: fixed ui issue" -v
 
 # With both file output and voice
 devai formatStandup "fixed bugs, added features" -o "./standup.txt" -v
+
+# Show all of today's standups after saving
+devai formatStandup "huntgate: fixed bug" -o "./job.txt" -a
+
+# Combine all options
+devai formatStandup "lockgate: added css" -o "./job.txt" -a -v
+```
+
+## Smart Standup Merging
+
+When saving to a file, the CLI intelligently merges standups:
+
+- **Same day, same project** → Tasks are merged under the same project
+- **Same day, different project** → New project section is added
+- **Different day** → New date section is created
+- **Duplicate tasks** → Automatically ignored
+
+### Example
+
+```bash
+# 9 AM - First standup
+devai formatStandup "huntgate: fixed bug" -o "./Job.txt"
+# File content:
+# Updates [17/12/2025 - Wednesday]:-
+# Huntgate:
+# - Fixed bug
+
+# 12 PM - Add more to same project
+devai formatStandup "huntgate: added css" -o "./Job.txt"
+# File content (merged):
+# Updates [17/12/2025 - Wednesday]:-
+# Huntgate:
+# - Fixed bug
+# - Added CSS
+
+# 3 PM - Add different project
+devai formatStandup "lockgate: api done" -o "./Job.txt" -a
+# Output shows all today's standups:
+# 📋 Today's Complete Standup:
+#
+# Updates [17/12/2025 - Wednesday]:-
+# Huntgate:
+# - Fixed bug
+# - Added CSS
+#
+# Lockgate:
+# - Completed API
 ```
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `devai <query>` | Ask AI any development question |
-| `devai ask <query>` | Same as above (explicit) |
-| `devai formatStandup <data>` | Format your standup notes |
-| `devai --help` | Show help information |
-| `devai --version` | Show version number |
+| Command                      | Description                      |
+| ---------------------------- | -------------------------------- |
+| `devai <query>`              | Ask AI any development question  |
+| `devai ask <query>`          | Same as above (explicit)         |
+| `devai formatStandup <data>` | Format your standup notes        |
+| `devai --help`               | Show help information            |
+| `devai --version`            | Show version number              |
 
 ## Options
 
 ### Global Options
 
-| Option | Description |
-|--------|-------------|
-| `-v, --voice` | Speak the AI response using text-to-speech |
-| `-h, --help` | Display help for command |
+| Option        | Description                                  |
+| ------------- | -------------------------------------------- |
+| `-v, --voice` | Speak the AI response using text-to-speech   |
+| `-h, --help`  | Display help for command                     |
 
 ### formatStandup Options
 
-| Option | Description |
-|--------|-------------|
-| `-o, --output <path>` | Output file path to append the standup |
-| `-v, --voice` | Speak the AI response using text-to-speech |
+| Option               | Short | Description                                    |
+| -------------------- | ----- | ---------------------------------------------- |
+| `--output <path>`    | `-o`  | Output file path to save/merge the standup     |
+| `--voice`            | `-v`  | Speak the AI response using text-to-speech     |
+| `--all`              | `-a`  | Show all of today's standups from file         |
 
 ## Examples
 
@@ -118,6 +167,12 @@ devai formatStandup "completed auth module, started dashboard" -v
 
 # Format standup with file output and voice
 devai formatStandup "fixed bugs in production" -o "./job.txt" --voice
+
+# Format and show all today's standups
+devai formatStandup "huntgate: wrote tests" -o "./job.txt" -a
+
+# Format with all options (save, show all, voice)
+devai formatStandup "lockgate: deployed to staging" -o "./job.txt" -a -v
 ```
 
 ## Tech Stack
@@ -132,10 +187,12 @@ devai formatStandup "fixed bugs in production" -o "./job.txt" --voice
 ## Voice Configuration
 
 The voice feature uses Windows built-in speech synthesis with the following defaults:
+
 - **Voice:** Microsoft Zira Desktop (Female US English)
 - **Rate:** -2 (slightly slower than normal)
 
 Available voices on Windows:
+
 - `Microsoft Zira Desktop` - Female US English
 - `Microsoft David Desktop` - Male US English
 - `Microsoft Mark Desktop` - Male US English
@@ -149,6 +206,7 @@ powershell -Command "Add-Type -AssemblyName System.Speech; $speak = New-Object S
 ## Troubleshooting
 
 ### Command not found
+
 If `devai` command doesn't work, try running directly:
 
 ```powershell
@@ -156,6 +214,7 @@ If `devai` command doesn't work, try running directly:
 ```
 
 ### File not saving to Desktop
+
 Your Desktop might be synced with OneDrive. Check the actual path:
 
 ```powershell
@@ -163,6 +222,14 @@ Your Desktop might be synced with OneDrive. Check the actual path:
 ```
 
 Use the returned path instead (e.g., `C:\Users\YourName\OneDrive\Desktop\Job.txt`)
+
+### Voice not working
+
+Make sure you're running on Windows and have speech synthesis installed:
+
+```powershell
+powershell -Command "Add-Type -AssemblyName System.Speech; $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; $speak.Speak('Hello')"
+```
 
 ## License
 

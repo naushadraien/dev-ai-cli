@@ -64,6 +64,7 @@ program
  * @param {Object} options - Command options
  * @param {string} [options.output] - Optional file path to append the formatted standup
  * @param {boolean} [options.voice] - Optional flag to speak the response
+ * @param {boolean} [options.all] - Optional flag to show all of today's standups from file
  * @example
  * // Without file output
  * devai formatStandup "fixed login bug, added validation"
@@ -74,26 +75,47 @@ program
  * // With voice output
  * devai formatStandup "fixed login bug" -v
  *
- * // With both file and voice output
- * devai formatStandup "fixed bug" -o "./job.txt" -v
+ * // Show all of today's standups after saving
+ * devai formatStandup "fixed bug" -o "./job.txt" -a
+ * devai formatStandup "fixed bug" -o "./job.txt" --all
+ *
+ * // With all options combined
+ * devai formatStandup "fixed bug" -o "./job.txt" -a -v
  */
 program
   .command("formatStandup")
   .argument("<data...>", "Standup data to format")
   .option("-o, --output <path>", "Output file path to append the standup")
   .option("-v, --voice", "Speak the AI response using text-to-speech")
+  .option("-a, --all", "Show all of today's standups from file after saving")
   .description("Format the provided standup")
   .action(async (data, options) => {
     const text = data.join(" ");
     const spinner = ora("🤖 AI is formatting your standup...").start();
     try {
-      const result = await formatStandup(text, options.output);
-      spinner.succeed("Standup formatted!");
-      console.log(chalk.cyan(result));
+      const result = await formatStandup(text, {
+        outputFilePath: options.output,
+        showAll: options.all,
+      });
 
+      spinner.succeed("Standup formatted!");
+
+      // Show appropriate output based on options
+      if (options.all && result.todayStandup) {
+        console.log(chalk.cyan("\n📋 Today's Complete Standup:\n"));
+        console.log(chalk.cyan(result.todayStandup));
+      } else {
+        console.log(chalk.cyan(result.latestResponse));
+      }
+
+      // Voice output
       if (options.voice) {
+        const textToSpeak =
+          options.all && result.todayStandup
+            ? result.todayStandup
+            : result.latestResponse;
         spinner.start("🔊 Speaking...");
-        await speak(result);
+        await speak(textToSpeak);
         spinner.succeed("Done speaking!");
       }
     } catch (error) {
