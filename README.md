@@ -6,6 +6,7 @@ A powerful command-line AI assistant powered by Google Gemini for developers.
 
 - 🤖 Ask AI any coding or development question
 - 🎫 Analyze Jira/development tickets into action plans
+- 🔄 Convert JSON to TypeScript interfaces (with optional Zod schemas)
 - 📝 Format standup notes automatically
 - 📁 Save output to files (with smart merging)
 - 🔊 Text-to-speech voice output
@@ -59,6 +60,31 @@ devai "Explain async/await in JavaScript"
 # With voice output
 devai "What is TypeScript?" -v
 devai "Explain promises" --voice
+```
+
+### Convert JSON to TypeScript
+
+```bash
+# From clipboard (PowerShell)
+Get-Clipboard | devai json2ts
+
+# From clipboard (macOS/Linux)
+pbpaste | devai json2ts
+
+# From a file
+devai json2ts ./data.json
+
+# With custom root type name
+devai json2ts ./user.json -n User
+
+# With Zod schema generation
+devai json2ts ./user.json --zod
+
+# With custom name and Zod
+devai json2ts ./api-response.json -n ApiResponse --zod
+
+# Opens editor for manual input
+devai json2ts
 ```
 
 ### Analyze Jira/Development Tickets
@@ -140,6 +166,75 @@ devai formatStandup "lockgate: api done" -o "./Job.txt" -a
 # - Completed API
 ```
 
+## JSON to TypeScript
+
+The `json2ts` command converts JSON data into TypeScript interfaces with optional Zod schema generation.
+
+### Input Methods (in priority order)
+
+1. **Piped input** - Clipboard or JSON content piped via stdin
+2. **File argument** - Path to a JSON file
+3. **Editor** - Opens system editor for manual input
+
+### Sample Output
+
+For this JSON:
+```json
+{
+  "id": 1,
+  "name": "John",
+  "email": null,
+  "address": {
+    "city": "NYC",
+    "zip": 10001
+  }
+}
+```
+
+**Without `--zod`:**
+```typescript
+interface Address {
+  city: string;
+  zip: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email?: null;
+  address: Address;
+}
+```
+
+**With `--zod`:**
+```typescript
+import { z } from "zod";
+
+interface Address {
+  city: string;
+  zip: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email?: null;
+  address: Address;
+}
+
+const AddressSchema = z.object({
+  city: z.string(),
+  zip: z.number(),
+});
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.null().optional(),
+  address: AddressSchema,
+});
+```
+
 ## Ticket Analysis
 
 The `ticketAnalyze` command converts development tickets into structured action plans.
@@ -174,14 +269,15 @@ Risks & Edge Cases:
 
 ## Commands
 
-| Command                       | Description                               |
-| ----------------------------- | ----------------------------------------- |
-| `devai <query>`               | Ask AI any development question           |
-| `devai ask <query>`           | Same as above (explicit)                  |
-| `devai ticketAnalyze [file]`  | Analyze a ticket and generate action plan |
-| `devai formatStandup <data>`  | Format your standup notes                 |
-| `devai --help`                | Show help information                     |
-| `devai --version`             | Show version number                       |
+| Command                       | Description                                |
+| ----------------------------- | ------------------------------------------ |
+| `devai <query>`               | Ask AI any development question            |
+| `devai ask <query>`           | Same as above (explicit)                   |
+| `devai json2ts [file]`        | Convert JSON to TypeScript (+ Zod)         |
+| `devai ticketAnalyze [file]`  | Analyze a ticket and generate action plan  |
+| `devai formatStandup <data>`  | Format your standup notes                  |
+| `devai --help`                | Show help information                      |
+| `devai --version`             | Show version number                        |
 
 ## Options
 
@@ -191,6 +287,14 @@ Risks & Edge Cases:
 | ------------- | -------------------------------------------- |
 | `-v, --voice` | Speak the AI response using text-to-speech   |
 | `-h, --help`  | Display help for command                     |
+
+### json2ts Options
+
+| Option           | Short | Description                           |
+| ---------------- | ----- | ------------------------------------- |
+| `[filePath]`     |       | Optional JSON file path               |
+| `--name <name>`  | `-n`  | Root type name (default: "RootObject")|
+| `--zod`          |       | Generate Zod schema                   |
 
 ### formatStandup Options
 
@@ -214,6 +318,15 @@ devai "how to center a div in css"
 
 # Ask with voice response
 devai "explain async await in javascript" -v
+
+# Convert JSON to TypeScript from clipboard (PowerShell)
+Get-Clipboard | devai json2ts
+
+# Convert JSON with custom type name
+devai json2ts ./user.json -n User
+
+# Convert JSON with Zod schema
+devai json2ts ./data.json -n ApiResponse --zod
 
 # Analyze ticket from clipboard (PowerShell)
 Get-Clipboard | devai ticketAnalyze

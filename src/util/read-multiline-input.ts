@@ -19,6 +19,10 @@ import { edit } from "external-editor";
  * otherwise returns null.
  */
 const readStdin = async (): Promise<string | null> => {
+  if (process.stdin.isTTY) {
+    return null;
+  }
+
   return new Promise((resolve) => {
     let data = "";
 

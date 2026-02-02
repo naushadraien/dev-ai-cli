@@ -2,10 +2,11 @@ import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
 import { defaultCommand } from "./commands/default";
+import { json2ts } from "./commands/json-to-ts";
 import { formatStandup } from "./commands/standup-formatter";
-import { speak } from "./util/speak-with-powershell";
 import { analyzeTicket } from "./commands/ticket-analyze";
 import { readMultilineInput } from "./util/read-multiline-input";
+import { speak } from "./util/speak-with-powershell";
 
 /* 
 you can run any of the below command in the powershell if the devai command does not work:
@@ -91,6 +92,47 @@ program
     } catch (error) {
       spinner.fail("Ticket analysis failed");
       console.error(chalk.red(String(error)));
+    }
+  });
+
+/**
+ * JSON to TypeScript command - Converts JSON to TypeScript interfaces and Zod schemas
+ * @param {string} [filePath] - Optional JSON file path
+ * @param {Object} options - Command options
+ * @param {string} [options.name] - Root type name (default: "RootObject")
+ * @param {boolean} [options.zod] - Include Zod schema generation
+ * @example
+ * // From clipboard (PowerShell)
+ * // Get-Clipboard | devai json2ts
+ *
+ * // From file
+ * devai json2ts ./data.json
+ *
+ * // With custom root name
+ * devai json2ts ./user.json -n User
+ *
+ * // With Zod schema
+ * devai json2ts ./user.json -n User --zod
+ */
+program
+  .command("json2ts")
+  .argument("[filePath]", "JSON file path")
+  .option("-n, --name <name>", "Root type name", "RootObject")
+  .option("--zod", "Generate Zod schema")
+  .description("Generate TypeScript types (and Zod schema) from JSON")
+  .action(async (filePath, options) => {
+    const spinner = ora("🔧 Reading JSON...").start();
+    try {
+      const jsonInput = await readMultilineInput(filePath);
+
+      spinner.text = "Generating TypeScript...";
+      const result = await json2ts(jsonInput, options.name, options.zod);
+
+      spinner.succeed("Types generated successfully!");
+      console.log("\n" + result);
+    } catch (err) {
+      spinner.fail("Failed to generate types");
+      console.error(chalk.red((err as Error).message));
     }
   });
 
