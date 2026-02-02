@@ -125,6 +125,17 @@ devai formatStandup "huntgate: fixed bug" -o "./job.txt" -a
 devai formatStandup "lockgate: added css" -o "./job.txt" -a -v
 ```
 
+### View today's standups
+
+```bash
+# View all of today's standups from file
+devai viewStandup -f "./job.txt"
+
+# With voice output
+devai viewStandup -f "C:\Users\YourName\Desktop\job.txt" -v
+devai viewStandup --file "./job.txt" --voice
+```
+
 ## Smart Standup Merging
 
 When saving to a file, the CLI intelligently merges standups:
@@ -276,6 +287,7 @@ Risks & Edge Cases:
 | `devai json2ts [file]`        | Convert JSON to TypeScript (+ Zod)         |
 | `devai ticketAnalyze [file]`  | Analyze a ticket and generate action plan  |
 | `devai formatStandup <data>`  | Format your standup notes                  |
+| `devai viewStandup -f <file>` | View all of today's standups from file     |
 | `devai --help`                | Show help information                      |
 | `devai --version`             | Show version number                        |
 
@@ -310,6 +322,14 @@ Risks & Edge Cases:
 | ------------ | ---------------------------------------------------- |
 | `[filePath]` | Optional file path containing the ticket description |
 
+### viewStandup Options
+
+| Option          | Short | Description                                |
+| --------------- | ----- | ------------------------------------------ |
+| `--file <path>` | `-f`  | **(Required)** Standup file path           |
+| `--voice`       | `-v`  | Speak the standup using text-to-speech     |
+
+
 ## Examples
 
 ```bash
@@ -341,7 +361,7 @@ devai ticketAnalyze ./tickets/JIRA-123.txt
 devai ticketAnalyze
 
 # Format standup and save to Desktop
-devai formatStandup "huntgate: fixed ui, lockgate: added css" -o "C:\Users\irsha\OneDrive\Desktop\Job.txt"
+devai formatStandup "huntgate: fixed ui, lockgate: added css" -o "C:\Users\<YourName>\OneDrive\Desktop\Job.txt"
 
 # Format standup with voice
 devai formatStandup "completed auth module, started dashboard" -v
@@ -354,6 +374,12 @@ devai formatStandup "huntgate: wrote tests" -o "./job.txt" -a
 
 # Format with all options (save, show all, voice)
 devai formatStandup "lockgate: deployed to staging" -o "./job.txt" -a -v
+
+# View today's standups without adding new ones
+devai viewStandup -f "./job.txt"
+
+# View with voice
+devai viewStandup -f "C:\Users\<YourName>\OneDrive\Desktop\Job.txt" -v
 ```
 
 ## Tech Stack
@@ -402,7 +428,7 @@ Your Desktop might be synced with OneDrive. Check the actual path:
 [Environment]::GetFolderPath("Desktop")
 ```
 
-Use the returned path instead (e.g., `C:\Users\YourName\OneDrive\Desktop\Job.txt`)
+Use the returned path instead (e.g., `C:\Users\<YourName>\OneDrive\Desktop\Job.txt`)
 
 ### Voice not working
 

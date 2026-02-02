@@ -5,6 +5,7 @@ import { defaultCommand } from "./commands/default";
 import { json2ts } from "./commands/json-to-ts";
 import { formatStandup } from "./commands/standup-formatter";
 import { analyzeTicket } from "./commands/ticket-analyze";
+import { viewTodayStandup } from "./commands/view-today-standup";
 import { readMultilineInput } from "./util/read-multiline-input";
 import { speak } from "./util/speak-with-powershell";
 
@@ -199,6 +200,45 @@ program
     } catch (error) {
       spinner.fail("Failed to format standup!");
       console.error(chalk.red(error));
+    }
+  });
+
+/**
+ * View Standup command - View all of today's standups from file
+ * @param {Object} options - Command options
+ * @param {string} options.file - File path containing standups
+ * @param {boolean} [options.voice] - Optional flag to speak the response
+ * @example
+ * devai viewStandup -f "./job.txt"
+ * devai viewStandup --file "C:\Users\irsha\Desktop\job.txt" -v
+ */
+program
+  .command("viewStandup")
+  .requiredOption("-f, --file <path>", "Standup file path")
+  .option("-v, --voice", "Speak the standup using text-to-speech")
+  .description("View all of today's standups from file")
+  .action(async (options) => {
+    const spinner = ora("📋 Reading standups...").start();
+    try {
+      const todayStandup = await viewTodayStandup(options.file);
+
+      if (!todayStandup.trim()) {
+        spinner.warn("No standups found for today");
+        return;
+      }
+
+      spinner.succeed("Found today's standups!");
+      console.log(chalk.cyan("\n📋 Today's Standups:\n"));
+      console.log(chalk.cyan(todayStandup.trim()));
+
+      if (options.voice) {
+        spinner.start("🔊 Speaking...");
+        await speak(todayStandup);
+        spinner.succeed("Done speaking!");
+      }
+    } catch (error) {
+      spinner.fail("Failed to read standups");
+      console.error(chalk.red((error as Error).message));
     }
   });
 
