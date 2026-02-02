@@ -4,6 +4,8 @@ import ora from "ora";
 import { defaultCommand } from "./commands/default";
 import { formatStandup } from "./commands/standup-formatter";
 import { speak } from "./util/speak-with-powershell";
+import { analyzeTicket } from "./commands/ticket-analyze";
+import { readMultilineInput } from "./util/read-multiline-input";
 
 /* 
 you can run any of the below command in the powershell if the devai command does not work:
@@ -55,6 +57,40 @@ program
     } catch (error) {
       spinner.fail("Something went wrong!");
       console.error(chalk.red(error));
+    }
+  });
+
+/**
+ * Ticket Analyze command - Analyzes development tickets into action plans
+ * @param {string} [filePath] - Optional file path containing the ticket text
+ * @example
+ * // Using clipboard (PowerShell)
+ * // Get-Clipboard | devai ticketAnalyze
+ *
+ * // Using clipboard (macOS/Linux)
+ * // pbpaste | devai ticketAnalyze
+ *
+ * // From a file
+ * devai ticketAnalyze ./ticket.txt
+ *
+ * // Opens editor for manual input if no stdin or file
+ * devai ticketAnalyze
+ */
+program
+  .command("ticketAnalyze")
+  .argument("[filePath]", "Optional file containing ticket text")
+  .description("Analyze a Jira ticket and generate an action plan")
+  .action(async (filePath) => {
+    const spinner = ora("🧠 Analyzing ticket...").start();
+    try {
+      const ticketText = await readMultilineInput(filePath);
+      const result = await analyzeTicket(ticketText);
+
+      spinner.succeed("Analysis complete!");
+      console.log(chalk.cyan(result));
+    } catch (error) {
+      spinner.fail("Ticket analysis failed");
+      console.error(chalk.red(String(error)));
     }
   });
 

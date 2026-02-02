@@ -5,6 +5,7 @@ A powerful command-line AI assistant powered by Google Gemini for developers.
 ## Features
 
 - 🤖 Ask AI any coding or development question
+- 🎫 Analyze Jira/development tickets into action plans
 - 📝 Format standup notes automatically
 - 📁 Save output to files (with smart merging)
 - 🔊 Text-to-speech voice output
@@ -58,6 +59,22 @@ devai "Explain async/await in JavaScript"
 # With voice output
 devai "What is TypeScript?" -v
 devai "Explain promises" --voice
+```
+
+### Analyze Jira/Development Tickets
+
+```bash
+# Using clipboard (PowerShell)
+Get-Clipboard | devai ticketAnalyze
+
+# Using clipboard (macOS/Linux)
+pbpaste | devai ticketAnalyze
+
+# From a file
+devai ticketAnalyze ./ticket.txt
+
+# Opens editor for manual input if no stdin or file
+devai ticketAnalyze
 ```
 
 ### Format standup notes
@@ -123,15 +140,48 @@ devai formatStandup "lockgate: api done" -o "./Job.txt" -a
 # - Completed API
 ```
 
+## Ticket Analysis
+
+The `ticketAnalyze` command converts development tickets into structured action plans.
+
+### Input Methods (in priority order)
+
+1. **Piped input** - Clipboard or file content piped via stdin
+2. **File argument** - Path to a file containing the ticket
+3. **Editor** - Opens system editor for manual input
+
+### Sample Output
+
+```
+Summary:
+- Add user authentication to the dashboard page
+
+Frontend Tasks:
+- Create login form component
+- Add form validation
+- Implement error handling UI
+
+Backend Tasks:
+- Create /auth/login endpoint
+- Implement JWT token generation
+- Add password hashing
+
+Risks & Edge Cases:
+- Session timeout handling
+- Multiple failed login attempts
+- Password reset flow not specified
+```
+
 ## Commands
 
-| Command                      | Description                      |
-| ---------------------------- | -------------------------------- |
-| `devai <query>`              | Ask AI any development question  |
-| `devai ask <query>`          | Same as above (explicit)         |
-| `devai formatStandup <data>` | Format your standup notes        |
-| `devai --help`               | Show help information            |
-| `devai --version`            | Show version number              |
+| Command                       | Description                               |
+| ----------------------------- | ----------------------------------------- |
+| `devai <query>`               | Ask AI any development question           |
+| `devai ask <query>`           | Same as above (explicit)                  |
+| `devai ticketAnalyze [file]`  | Analyze a ticket and generate action plan |
+| `devai formatStandup <data>`  | Format your standup notes                 |
+| `devai --help`                | Show help information                     |
+| `devai --version`             | Show version number                       |
 
 ## Options
 
@@ -150,6 +200,12 @@ devai formatStandup "lockgate: api done" -o "./Job.txt" -a
 | `--voice`            | `-v`  | Speak the AI response using text-to-speech     |
 | `--all`              | `-a`  | Show all of today's standups from file         |
 
+### ticketAnalyze Options
+
+| Option       | Description                                          |
+| ------------ | ---------------------------------------------------- |
+| `[filePath]` | Optional file path containing the ticket description |
+
 ## Examples
 
 ```bash
@@ -158,6 +214,18 @@ devai "how to center a div in css"
 
 # Ask with voice response
 devai "explain async await in javascript" -v
+
+# Analyze ticket from clipboard (PowerShell)
+Get-Clipboard | devai ticketAnalyze
+
+# Analyze ticket from clipboard (macOS)
+pbpaste | devai ticketAnalyze
+
+# Analyze ticket from file
+devai ticketAnalyze ./tickets/JIRA-123.txt
+
+# Open editor to type/paste ticket manually
+devai ticketAnalyze
 
 # Format standup and save to Desktop
 devai formatStandup "huntgate: fixed ui, lockgate: added css" -o "C:\Users\irsha\OneDrive\Desktop\Job.txt"
